@@ -34,15 +34,29 @@ public class MGS2 : InjectEffectPack
 
     // Alert Statuses
     private AddressChain alertTimer;
+    private AddressChain evasionTimer;
+    private AddressChain alertStatusTrigger;
+
+    // Camera and HUD
+    private AddressChain letterBoxMode;
+    private AddressChain dayOrNightMode;
+    private AddressChain cameraZoom;
+    private AddressChain hudFilter;
+
+    // Guards
+    private AddressChain guardAnimations;
+    private AddressChain guardWakeStatus;
+    private AddressChain guardSleepStatus;
 
     // Snake/Raiden
     private AddressChain flinchPlayer;
-    private AddressChain equippedWeapon;
-    private AddressChain equippedItem;
-    private AddressChain weaponClipCount;
+    private AddressChain stealthMode;
 
     // Weapons and Items
     private AddressChain weaponsAndItemPointer;
+    private AddressChain equippedWeapon;
+    private AddressChain equippedItem;
+    private AddressChain weaponClipCount;
 
     #endregion
 
@@ -52,16 +66,36 @@ public class MGS2 : InjectEffectPack
     {
         Connector.PointerFormat = PointerFormat.Absolute64LE;
 
+        // Game State Checks
         characterString = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+949340=>+1C");
         mapString = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+949340=>+2C");
         pauseState = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+17DBC7C");
+
+        // Alert Stauses
         alertTimer = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+16C9568");
+        evasionTimer = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+16C9584");
+        alertStatusTrigger = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+949340=>+11A");
+
+        // Camera and HUD
+        letterBoxMode = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+15525CD");
+        dayOrNightMode = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+2D18EF");
+        cameraZoom = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+15525C9");
+
+        // Guards
+        guardAnimations = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+16EA3D"); // Array 7
+        guardWakeStatus = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+159CED");
+        guardSleepStatus = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+1592D8");
+
+        // Snake/Raiden
         flinchPlayer = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+17DF660=>+A8");
+
+        // Weapons, Ammo & Items
         weaponsAndItemPointer = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+1540C20=>+0");
         equippedWeapon = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+949340=>+104");
         equippedItem = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+949340=>+106");
         weaponClipCount = AddressChain.Parse(Connector, "\"METAL GEAR SOLID2.exe\"+16E994C");
     }
+
 
     private void DeinitGame()
     {
@@ -660,6 +694,272 @@ public class MGS2 : InjectEffectPack
         }
     }
 
+    private async void SetEvasionStatus()
+    {
+        try
+        {
+            Log.Message("Attempting to set alert time to 9999");
+            Set16(alertTimer, 1100);
+            await Task.Delay(500);
+            Set16(alertTimer, 0);
+            Set16(evasionTimer, 9999);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting alert time: {e.Message}");
+        }
+    }
+
+    private async void SetLongEvasionStatus()
+    {
+        try
+        {
+            Log.Message("Attempting to set alert time to 9999");
+            Set16(alertTimer, 1100);
+            await Task.Delay(500);
+            Set16(alertTimer, 0);
+            Set16(evasionTimer, 9999);
+            await Task.Delay(2000);
+            Set16(evasionTimer, 9999);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting alert time: {e.Message}");
+        }
+    }
+
+    // Caution is set by altering the alterStatusTrigger value to 2
+    private async void SetCautionStatus()
+    {
+        try
+        {
+            Log.Message("Attempting to set alert status to Caution");
+            Set16(alertStatusTrigger, 2);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting alert status to Caution: {e.Message}");
+        }
+    }
+
+    #endregion
+
+    #region Camera and HUD
+
+    private void SetLetterBoxMode()
+    {
+        try
+        {
+            Set8(letterBoxMode, 0);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting letterbox mode: {e.Message}");
+        }
+    }
+
+    private void UndoLetterBoxMode()
+    {
+        try
+        {
+            Set8(letterBoxMode, 1);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while undoing letterbox mode: {e.Message}");
+        }
+    }
+
+    private void SetDayMode()
+    {
+        try
+        {
+            Set8(dayOrNightMode, 255);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting day or night mode: {e.Message}");
+        }
+    }
+
+    private void SetNightMode()
+    {
+        try
+        {
+            Set8(dayOrNightMode, 0);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting day or night mode: {e.Message}");
+        }
+    }
+
+    private void SetCameraZoomOut()
+    {
+        try
+        {
+            Set8(cameraZoom, 1);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting camera zoom: {e.Message}");
+        }
+    }
+
+    private void SetCameraZoomNormal()
+    {
+        try
+        {
+            Set8(cameraZoom, 2);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting camera zoom: {e.Message}");
+        }
+    }
+
+    private void SetCameraZoomIn()
+    {
+        try
+        {
+            Set8(cameraZoom, 3);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"An error occurred while setting camera zoom: {e.Message}");
+        }
+    }
+
+    // Read the current camera zoom value
+    private byte GetCameraZoom()
+    {
+        return Get8(cameraZoom);
+    }
+
+    #endregion
+
+    #region Guards
+
+    private void SetGuardAnimationsNormal()
+    {
+        byte[] normalBytes = { 0x0F, 0xBF, 0x90, 0x00, 0x0C, 0x00, 0x00 };
+        SetArray(guardAnimations, normalBytes);
+    }
+
+    private void SetGuardAnimationsPointGun()
+    {
+        byte[] pointGunBytes = { 0xBA, 0x02, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, pointGunBytes);
+    }
+
+    private void SetGuardAnimationsMoveForward()
+    {
+        byte[] moveForwardBytes = { 0xBA, 0x03, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, moveForwardBytes);
+    }
+
+    private void SetGuardAnimationsYawn()
+    {
+        byte[] yawnBytes = { 0xBA, 0x04, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, yawnBytes);
+    }
+
+    private void SetGuardAnimationsStretch()
+    {
+        byte[] stretchBytes = { 0xBA, 0x05, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, stretchBytes);
+    }
+
+    private void SetGuardAnimationsSleepy()
+    {
+        byte[] sleepyBytes = { 0xBA, 0x06, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, sleepyBytes);
+    }
+
+    private void SetGuardAnimationsAttention()
+    {
+        byte[] attentionBytes = { 0xBA, 0x07, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, attentionBytes);
+    }
+
+    private void SetGuardAnimationsLongDistanceOverwatch()
+    {
+        byte[] longDistanceOverwatchBytes = { 0xBA, 0x0A, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, longDistanceOverwatchBytes);
+    }
+
+    private void SetGuardAnimationsTakeOffGoggles()
+    {
+        byte[] takeOffGogglesBytes = { 0xBA, 0x0B, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, takeOffGogglesBytes);
+    }
+
+    private void SetGuardAnimationsShortDistanceOverwatch()
+    {
+        byte[] shortDistanceOverwatchBytes = { 0xBA, 0x0D, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, shortDistanceOverwatchBytes);
+    }
+
+    private void SetGuardAnimationsPatTheFloor()
+    {
+        byte[] patTheFloorBytes = { 0xBA, 0x15, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, patTheFloorBytes);
+    }
+
+    private void SetGuardAnimationsPhaseInOut()
+    {
+        byte[] phaseInOutBytes = { 0xBA, 0x16, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, phaseInOutBytes);
+    }
+
+    private void SetGuardAnimationsPeeWiggle()
+    {
+        byte[] peeWiggleBytes = { 0xBA, 0x1B, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, peeWiggleBytes);
+    }
+
+    private void SetGuardAnimationsLeanRight()
+    {
+        byte[] leanRightBytes = { 0xBA, 0x1D, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, leanRightBytes);
+    }
+
+    private void SetGuardAnimationsLeanLeft()
+    {
+        byte[] leanLeftBytes = { 0xBA, 0x1E, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, leanLeftBytes);
+    }
+
+    private void SetGuardAnimationsRollLeft()
+    {
+        byte[] rollLeftBytes = { 0xBA, 0x1F, 0x00, 0x00, 0x00, 0x90, 0x90 };
+        SetArray(guardAnimations, rollLeftBytes);
+    }
+
+    private void SetGuardSleepStatusNormal()
+    {
+        byte[] normalBytes = { 0x66, 0x44, 0x29, 0x82, 0x52, 0x13, 0x00, 0x00 };
+        SetArray(guardSleepStatus, normalBytes);
+    }
+
+    private void SetGuardSleepStatusAlwaysAsleep()
+    {
+        byte[] alwaysAsleepBytes = { 0x83, 0xAA, 0x52, 0x13, 0x00, 0x00, 0x35, 0x90 };
+        SetArray(guardSleepStatus, alwaysAsleepBytes);
+    }
+
+    private void SetGuardWakeStatusNormal()
+    {
+        byte[] normalBytes = { 0x66, 0x83, 0xAB, 0x5A, 0x13, 0x00, 0x00, 0x01, 0x79, 0x07 };
+        SetArray(guardWakeStatus, normalBytes);
+    }
+
+    private void SetGuardWakeStatusAwake()
+    {
+        byte[] awakeBytes = { 0x66, 0x81, 0xAB, 0x5A, 0x13, 0x00, 0x00, 0x00, 0x10, 0x90 };
+        SetArray(guardWakeStatus, awakeBytes);
+    }
+
     #endregion
 
     #region Snake/Raiden Effects
@@ -700,6 +1000,38 @@ public class MGS2 : InjectEffectPack
             return false;
         }
     }
+
+    private async Task<bool> BreakBox()
+    {
+        var manager = new WeaponItemManager(this);
+
+        Items eqItem = GetEquippedItemEnum();
+
+        if (eqItem != Items.ITM_BOX1 &&
+            eqItem != Items.ITM_BOX2 &&
+            eqItem != Items.ITM_BOX3 &&
+            eqItem != Items.ITM_BOX4 &&
+            eqItem != Items.ITM_BOX5 &&
+            eqItem != Items.ITM_WETBOX)
+        {
+            Log.Message("No valid box is currently equipped.");
+            return false;
+        }
+
+        short currentDurability = manager.ReadItemCapacity(eqItem);
+        Log.Message($"Equipped box: {eqItem}, current durability = {currentDurability}");
+        manager.WriteItemCapacity(eqItem, 1);
+        await Task.Delay(50);
+        manager.WriteItemCapacity(eqItem, 0);
+        await Task.Delay(2000);
+
+        manager.WriteItemCapacity(eqItem, currentDurability);
+        Log.Message($"Restored {eqItem} durability to {currentDurability}.");
+
+        return true;
+    }
+
+
 
     #endregion
 
@@ -1004,20 +1336,166 @@ public class MGS2 : InjectEffectPack
     {
         // Alert Status
         new ("Set Alert Status", "setAlertStatus")
-        {   Price = 80,
+        {   Price = 50,
             Description = "Triggers an alert status, sending the guards to attack the player",
-            Category = "Alert Status" },
-
-        // Snake/Raiden
-        new ("Flinch Player", "flinchPlayer")
-        {   Price = 40,
-            Description = "Makes the player flinch",
-            Category = "Snake/Raiden"
+            Category = "Alert Statuses"
         },
 
+        new ("Set Evasion Status", "setEvasionStatus")
+        {   Price = 30,
+            Description = "Triggers an evasion status, sending the guards to search for the player",
+            Category = "Alert Statuses"
+        },
+
+        new ("Set Caution Status", "setCautionStatus")
+        {   Price = 20,
+            Description = "Triggers a caution status, keeping guards on high alert during patrols",
+            Category = "Alert Statuses"
+        },
+
+        new ("Set Long Alert Status", "setLongAlertStatus")
+        {   Price = 75,
+            Duration = 20,
+            Description = "Triggers an alert status for a longer duration",
+            Category = "Alert Statuses"
+        },
+
+        new ("Set Long Evasion Status", "setLongEvasionStatus")
+        {   Price = 40,
+            Description = "Triggers an evasion status for a longer duration",
+            Category = "Alert Statuses"
+        },
+
+        // Camera and HUD
+        new ("Set HUD to Letterbox Mode", "setHudToLetterBoxMode")
+        {   Price = 40,
+            Duration = 30,
+            Description = "Sets the game to letterbox mode",
+            Category = "Camera and HUD"
+        },
+
+        new ("Make Camera Zoom in", "setCameraZoomIn")
+        {   Price = 40,
+            Duration = 30,
+            Description = "Zooms the camera in",
+            Category = "Camera and HUD"
+        },
+
+        new ("Set Game Lighting to Default", "setHudToDayMode")
+        {   Price = 15,
+            Description = "Sets the game to day mode, this effect is best used during the Plant chapter to notice it",
+            Category = "Camera and HUD"
+        },
+
+        new ("Set Game Lighting to Night", "setHudToNightMode")
+        {   Price = 15,
+            Description = "Sets the game lighting to night mode, this effect is best used during the Plant chapter to notice it",
+            Category = "Camera and HUD"
+        },
+
+
+        // Guards
+        new ("Set Guard to Normal", "setGuardAnimationsNormal")
+        {   Price = 20,
+            Description = "Sets the guard animations to normal",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Point Gun", "setGuardAnimationsPointGun")
+        {   Price = 20,
+            Description = "Sets the guard animations to point gun during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Move Forward", "setGuardAnimationsMoveForward")
+        {   Price = 20,
+            Description = "Sets the guard animations to move forward at their stopping points",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Yawn", "setGuardAnimationsYawn")
+        {   Price = 20,
+            Description = "Sets the guard animations to yawn when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Stretch", "setGuardAnimationsStretch")
+        {   Price = 20,
+            Description = "Sets the guard animations to stretch when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Long-Distance Overwatch", "setGuardAnimationsLongDistanceOverwatch")
+        {   Price = 20,
+            Description = "Sets the guard animations to look a long distance with their scope when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Take Off Goggles", "setGuardAnimationsTakeOffGoggles")
+        {   Price = 20,
+            Description = "Sets the guard animations to take off their goggles when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Pat the Floor", "setGuardAnimationsPatTheFloor")
+        {   Price = 20,
+            Description = "Sets the guard animations to pat the floor when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Phase In and Out", "setGuardAnimationsPhaseInOut")
+        {   Price = 20,
+            Description = "Sets the guard animations to break the known laws of physics and phase in and out when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Pee Wiggle", "setGuardAnimationsPeeWiggle")
+        {   Price = 20,
+            Description = "Sets the guard animations to wiggle as if they gotta pee when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Lean Right", "setGuardAnimationsLeanRight")
+        {   Price = 20,
+            Description = "Sets the guard animations to lean right when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Lean Left", "setGuardAnimationsLeanLeft")
+        {   Price = 20,
+            Description = "Sets the guard animations to lean left when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("Set Guard to Roll Left", "setGuardAnimationsRollLeft")
+        {   Price = 20,
+            Description = "Sets the guard animations to side roll to the left when they stop during their patrol",
+            Category = "Guards"
+        },
+
+        new ("All Guards go to Sleep", "forceGuardsToSleep")
+        {   Price = 40,
+            Description = "Forces all guards to sleep",
+            Category = "Guards"
+        },
+
+        new ("All Guards Wake Up", "forceGuardsToWakeUp")
+        {   Price = 40,
+            Description = "Forces all guards asleep to wake up",
+            Category = "Guards"
+        },
+
+        new ("All Guards Can't Be Knocked Out", "guardCantBeKnockedOut")
+        {   Price = 75,
+            Duration = 30,
+            Description = "Makes guards immune to being knocked out for a short period",
+            Category = "Guards"
+        },
+
+        // Snake/Raiden
         new ("Empty Gun Clip", "emptyGunClip")
         {
-            Price = 25,
+            Price = 40,
             Duration = 5,
             Description = "Continuously empties the player's weapon clip for a short duration",
             Category = "Snake/Raiden"
@@ -1031,8 +1509,23 @@ public class MGS2 : InjectEffectPack
             Category = "Snake/Raiden"
         },
 
+        new ("Break Box", "breakBox")
+        {
+            Price = 50,
+            Description = "Breaks the player's currently equipped box.... Snake won't be happy about this one",
+            Category = "Snake/Raiden"
+        },
+
+        /* Commented out until I can find a way to check if the player is in an animation to prevent the player from being locked in an animation 
+        new ("Flinch Player", "flinchPlayer")
+        {   Price = 40,
+            Description = "Makes the player flinch",
+            Category = "Snake/Raiden"
+        },
+        */
+
         // Ammo
-        new ("Subtract Ammo", "subtractAmmo")
+        new("Subtract Ammo", "subtractAmmo")
         {   Price = 1,
             Quantity = 50,
             Description = "Removes a chunk of the player's ammo/quantity from their equipped weapon",
@@ -1185,24 +1678,375 @@ public class MGS2 : InjectEffectPack
                     null, true);
                 break;
 
-            #endregion
-
-            #region Snake/Raiden
-
-            case "flinchPlayer":
+            case "setEvasionStatus":
                 TryEffect(request,
                     () => true,
                     () =>
                     {
-                        FlinchPlayer();
+                        SetEvasionStatus();
                         return true;
                     },
-                    () => Connector.SendMessage($"{request.DisplayViewer} made the player flinch."),
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to Evasion Status."),
                     null, true);
                 break;
 
+            case "setCautionStatus":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetCautionStatus();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to Caution Status."),
+                    null, true);
+                break;
+
+            case "setLongAlertStatus":
+                var longAlertDuration = request.Duration = TimeSpan.FromSeconds(20);
+                var longAlertAct = RepeatAction(request,
+                    () => true,
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to Alert Status for {longAlertDuration.TotalSeconds} seconds."),
+                    TimeSpan.Zero,
+                    () => IsReady(request),
+                    TimeSpan.FromMilliseconds(500),
+                    () =>
+                    {
+                        Set16(alertTimer, 9999);
+                        return true;
+                    },
+                    TimeSpan.FromMilliseconds(500),
+                    false);
+                longAlertAct.WhenCompleted.Then
+                    (_ =>
+                    {
+                        Connector.SendMessage("Alert Status has ended.");
+                    });
+                break;
+
+            case "setLongEvasionStatus":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetLongEvasionStatus();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to Evasion Status."),
+                    null, true);
+                break;
+
+            #endregion
+
+            #region Camera and HUD
+
+            case "setHudToLetterBoxMode":
+                var letterBoxDuration = request.Duration = TimeSpan.FromSeconds(30);
+                var letterBoxAct = RepeatAction(request,
+                    () => true,
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to letterbox mode for {letterBoxDuration.TotalSeconds} seconds."),
+                    TimeSpan.Zero,
+                    () => IsReady(request),
+                    TimeSpan.FromMilliseconds(500),
+                    () =>
+                    {
+                        SetLetterBoxMode();
+                        return true;
+                    },
+                    TimeSpan.FromMilliseconds(500),
+                    false);
+                letterBoxAct.WhenCompleted.Then
+                    (_ =>
+                    {
+                        UndoLetterBoxMode();
+                        Connector.SendMessage("Letterbox mode has ended.");
+                    });
+                break;
+
+            case "setCameraZoomIn":
+                byte current1 = GetCameraZoom();
+                if (current1 == 3)
+                {
+                    Respond(request, EffectStatus.FailPermanent, "Camera zoom effect already in action.");
+                    break;
+                }
+
+                var zoomInDuration = request.Duration = TimeSpan.FromSeconds(30);
+                var zoomInAct = RepeatAction(request,
+                    () => true,
+                    () => Connector.SendMessage($"{request.DisplayViewer} zoomed the camera in for {zoomInDuration.TotalSeconds} seconds."),
+                    TimeSpan.Zero,
+                    () => IsReady(request),
+                    TimeSpan.FromMilliseconds(500),
+                    () =>
+                    {
+                        SetCameraZoomIn();
+                        return true;
+                    },
+                    TimeSpan.FromMilliseconds(500),
+                    false);
+                zoomInAct.WhenCompleted.Then
+                    (_ =>
+                    {
+                        SetCameraZoomNormal();
+                        Connector.SendMessage("Camera zoom in has ended.");
+                    });
+                break;
+
+            case "setHudToDayMode":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetDayMode();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to day mode."),
+                    null, true);
+                break;
+
+            case "setHudToNightMode":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetNightMode();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the game to night mode."),
+                    null, true);
+                break;
+
+            #endregion
+
+            #region Guards
+
+            case "setGuardAnimationsNormal":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsNormal();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to normal."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsPointGun":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsPointGun();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to point gun."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsMoveForward":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsMoveForward();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to move forward."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsYawn":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsYawn();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to yawn."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsStretch":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsStretch();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to stretch."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsLongDistanceOverwatch":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsLongDistanceOverwatch();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to long-distance overwatch."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsTakeOffGoggles":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsTakeOffGoggles();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to take off goggles."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsPatTheFloor":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsPatTheFloor();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to pat the floor."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsPhaseInOut":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsPhaseInOut();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to phase in and out."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsPeeWiggle":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsPeeWiggle();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to pee wiggle."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsLeanRight":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsLeanRight();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to lean right."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsLeanLeft":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsLeanLeft();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to lean left."),
+                    null, true);
+                break;
+
+            case "setGuardAnimationsRollLeft":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardAnimationsRollLeft();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} set the guard animations to roll left."),
+                    null, true);
+                break;
+
+            case "forceGuardsToSleep":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardSleepStatusAlwaysAsleep();
+                        // Waiting 5 seconds gives it time to sleep all awake guards before returning to normal
+                        Task.Delay(5000).ContinueWith(_ => SetGuardSleepStatusNormal());
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} forced all guards to sleep."),
+                    null, true);
+                break;
+
+            case "forceGuardsToWakeUp":
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        SetGuardWakeStatusAwake();
+                        // Waiting 5 seconds gives it time to wake all sleeping guards before returning to normal
+                        Task.Delay(5000).ContinueWith(_ => SetGuardWakeStatusNormal());
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} forced all guards to wake up."),
+                    null, true);
+                break;
+
+            case "guardCantBeKnockedOut":
+                var guardCantBeKnockedOutDuration = request.Duration = TimeSpan.FromSeconds(30);
+                var guardCantBeKnockedOutAct = RepeatAction(request,
+                    () => true,
+                    () => Connector.SendMessage($"{request.DisplayViewer} made all guards immune to being knocked out for {guardCantBeKnockedOutDuration.TotalSeconds} seconds."),
+                    TimeSpan.Zero,
+                    () => IsReady(request),
+                    TimeSpan.FromMilliseconds(500),
+                () =>
+                {
+                    SetGuardWakeStatusAwake();
+                    return true;
+                },
+                    TimeSpan.FromMilliseconds(500),
+                false);
+                guardCantBeKnockedOutAct.WhenCompleted.Then
+                    (_ =>
+                    {
+                        SetGuardWakeStatusNormal();
+                        Connector.SendMessage("Guard knock out immunity has ended.");
+                    });
+                break;
+
+            #endregion
+
+            #region Snake/Raiden
+            /* Commented out until I can find a way to check if the player is in an animation to prevent the player from being locked in an animation
+            case "flinchPlayer":
+                    TryEffect(request,
+                        () => true,
+                        () =>
+                        {
+                            FlinchPlayer();
+                            return true;
+                        },
+                        () => Connector.SendMessage($"{request.DisplayViewer} made the player flinch."),
+                        null, true);
+                    break;
+            */
+
             case "emptyGunClip":
-                var emptyGunClipDuration = request.Duration = TimeSpan.FromSeconds(30);
+                var emptyGunClipDuration = request.Duration = TimeSpan.FromSeconds(5);
                 var emptyGunClipAct = RepeatAction(request,
                     () => true,
                     () => Connector.SendMessage($"{request.DisplayViewer} emptied the player's gun clip for {emptyGunClipDuration.TotalSeconds} seconds."),
@@ -1281,6 +2125,29 @@ public class MGS2 : InjectEffectPack
                 {
                     Respond(request, EffectStatus.FailPermanent, "Infinite Ammo is not available for this character.");
                 }
+                break;
+
+            case "breakBox":
+                Items eq = GetEquippedItemEnum();
+                if (eq != Items.ITM_BOX1 &&
+                    eq != Items.ITM_BOX2 &&
+                    eq != Items.ITM_BOX3 &&
+                    eq != Items.ITM_BOX4 &&
+                    eq != Items.ITM_BOX5 &&
+                    eq != Items.ITM_WETBOX)
+                {
+                    Respond(request, EffectStatus.FailPermanent, "Player does not have a box equipped.");
+                    break;
+                }
+                TryEffect(request,
+                    () => true,
+                    () =>
+                    {
+                        BreakBox();
+                        return true;
+                    },
+                    () => Connector.SendMessage($"{request.DisplayViewer} broke the player's box."),
+                    null, true);
                 break;
 
             #endregion
